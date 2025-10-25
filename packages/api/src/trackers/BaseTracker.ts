@@ -24,10 +24,30 @@ export abstract class BaseTracker {
 
   protected async makeRequest(url: string, params?: any): Promise<string> {
     try {
+      console.log(`Making request to ${this.config.name}: ${url}`, params);
       const response = await this.httpClient.get(url, { params });
+      console.log(`Response from ${this.config.name}:`, {
+        status: response.status,
+        statusText: response.statusText,
+        dataType: typeof response.data,
+        dataLength: response.data ? response.data.length : 0
+      });
+      
+      if (!response.data) {
+        throw new Error(`No data received from ${this.config.name}`);
+      }
+      
       return response.data;
-    } catch (error) {
-      console.error(`Error making request to ${this.config.name}:`, error);
+    } catch (error: any) {
+      console.error(`Error making request to ${this.config.name}:`, {
+        message: error.message,
+        code: error.code,
+        response: error.response ? {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data
+        } : 'No response'
+      });
       throw error;
     }
   }

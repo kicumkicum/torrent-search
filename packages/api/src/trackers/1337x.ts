@@ -7,7 +7,7 @@ export class X1337x extends BaseTracker {
       name: '1337x',
       baseUrl: 'https://1337x.to',
       searchPath: '/search',
-      enabled: true,
+      enabled: false, // Временно отключен из-за Cloudflare защиты
       rateLimit: 1500
     });
   }
@@ -34,45 +34,71 @@ export class X1337x extends BaseTracker {
     const results: TorrentResult[] = [];
 
     // Отладочная информация
-    console.log('HTML length:', html.length);
-    console.log('Found .table-list tbody tr elements:', $('.table-list tbody tr').length);
-    console.log('Found .table-list elements:', $('.table-list').length);
+    console.log('1337x HTML length:', html.length);
+    console.log('1337x Found .table-list tbody tr elements:', $('.table-list tbody tr').length);
+    console.log('1337x Found .table-list elements:', $('.table-list').length);
+    console.log('1337x Found .table-list tbody elements:', $('.table-list tbody').length);
+    console.log('1337x Found tr elements:', $('tr').length);
+    console.log('1337x Found table elements:', $('table').length);
 
-    $('.table-list tbody tr').each((index, element) => {
+    // Попробуем разные селекторы
+    const selectors = [
+      '.table-list tbody tr',
+      '.table-list tr',
+      'table tbody tr',
+      'table tr',
+      '.search-result',
+      '.result'
+    ];
+
+    let foundRows = 0;
+    for (const selector of selectors) {
+      const rows = $(selector);
+      console.log(`1337x Selector "${selector}": ${rows.length} elements`);
+      if (rows.length > 0) {
+        foundRows = rows.length;
+        break;
+      }
+    }
+
+    if (foundRows === 0) {
+      console.log('1337x No rows found with any selector');
+      // Выведем часть HTML для анализа
+      console.log('1337x HTML sample:', html.substring(0, 1000));
+      return results;
+    }
+
+    $('.table-list tbody tr, .table-list tr, table tbody tr, table tr').each((index, element) => {
       const $row = $(element);
-      console.log(`Processing row ${index}:`, $row.html());
       
       // Ищем ссылку на торрент (не magnet и не download)
       let titleElement = $row.find('a[href*="/torrent/"]').first();
       if (titleElement.length === 0) {
         titleElement = $row.find('td:nth-child(1) a').not('[href^="magnet:"]').not('[href*="download.php"]').first();
       }
-      
-      console.log('Title element found:', titleElement.length, titleElement.text());
+      if (titleElement.length === 0) {
+        titleElement = $row.find('a').not('[href^="magnet:"]').not('[href*="download.php"]').first();
+      }
       
       if (titleElement.length === 0) return;
 
       const title = this.extractText($, titleElement);
-      const torrentUrl = this.config.baseUrl + titleElement.attr('href');
+      if (!title || title.trim().length === 0) return;
+
+      const torrentUrl = titleElement.attr('href')?.startsWith('http') 
+        ? titleElement.attr('href')
+        : this.config.baseUrl + titleElement.attr('href');
       
       // Извлекаем информацию о размере
-      const sizeInfo = this.extractSize($, $row.find('td:nth-child(4)'));
+      const sizeInfo = this.extractSize($, $row.find('td:nth-child(4), td:nth-child(3), td:last-child'));
       
       // Извлекаем информацию о сидах/личах
-      const seeders = this.extractNumber($, $row.find('td:nth-child(2)'));
-      const leechers = this.extractNumber($, $row.find('td:nth-child(3)'));
+      const seeders = this.extractNumber($, $row.find('td:nth-child(2), td:nth-child(1)'));
+      const leechers = this.extractNumber($, $row.find('td:nth-child(3), td:nth-child(2)'));
 
       // Извлекаем magnet ссылку
-      const magnetElement = $row.find('td:nth-child(1) a[href^="magnet:"]');
+      const magnetElement = $row.find('a[href^="magnet:"]');
       const magnetUrl = magnetElement.attr('href');
-
-      // Извлекаем torrent ссылку
-      const torrentLinkElement = $row.find('td:nth-child(1) a[href*="download.php"]');
-      const torrentLink = torrentLinkElement.length > 0 
-        ? this.config.baseUrl + torrentLinkElement.attr('href')
-        : undefined;
-
-      console.log('Parsed result:', { title, seeders, leechers, size: sizeInfo.size, magnetUrl, torrentLink });
 
       const result: TorrentResult = {
         id: `1337x_${index}`,
@@ -84,7 +110,7 @@ export class X1337x extends BaseTracker {
         audioTracks: this.extractAudioTracks(title),
         seeders: seeders,
         leechers: leechers,
-        torrentUrl: torrentLink,
+        torrentUrl: torrentUrl,
         magnetUrl: magnetUrl,
         tracker: this.config.name,
         category: this.determineCategory(title),
@@ -95,7 +121,7 @@ export class X1337x extends BaseTracker {
       results.push(result);
     });
 
-    console.log('Total results parsed:', results.length);
+    console.log('1337x Total results parsed:', results.length);
     return results;
   }
 
