@@ -8,7 +8,11 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "lint": "eslint src --ext .ts",
-    "test": "jest"
+    "test": "jest",
+    "test:real": "RUN_REAL_TESTS=true jest src/__tests__/real-requests.test.ts --verbose --detectOpenHandles --forceExit",
+    "test:mock": "jest src/__tests__/html-parsing.test.ts src/__tests__/network-requests.test.ts --verbose",
+    "test:all": "jest --verbose --detectOpenHandles --forceExit",
+    "test:help": "node src/__tests__/run-tests.ts help"
   },
   "dependencies": {
     "axios": "^1.6.0",

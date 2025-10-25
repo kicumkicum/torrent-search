@@ -38,7 +38,12 @@ export class ThePirateBay extends BaseTracker {
       if (index === 0) return; // пропускаем заголовок
 
       const $row = $(element);
-      const titleElement = $row.find('td:nth-child(2) a');
+      
+      // Ищем ссылку на описание торрента (не magnet и не download)
+      let titleElement = $row.find('td:nth-child(2) a[href*="description.php"]');
+      if (titleElement.length === 0) {
+        titleElement = $row.find('td:nth-child(2) a').not('[href^="magnet:"]').not('[href*="download.php"]').first();
+      }
       
       if (titleElement.length === 0) return;
 
