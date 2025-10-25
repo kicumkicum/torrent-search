@@ -1,4 +1,9 @@
 import { RuTracker } from './trackers/RuTracker';
+import { RuTor } from './trackers/RuTor';
+import { Nyaa } from './trackers/Nyaa';
+import { YTS } from './trackers/YTS';
+import { RARBG } from './trackers/RARBG';
+import { LimeTorrents } from './trackers/LimeTorrents';
 import { ThePirateBay } from './trackers/ThePirateBay';
 import { X1337x } from './trackers/1337x';
 import { BaseTracker } from './trackers/BaseTracker';
@@ -11,6 +16,11 @@ export class TorrentSearch {
   constructor() {
     this.trackers = [
       new RuTracker(),
+      new RuTor(),
+      new Nyaa(),
+      new YTS(),
+      new RARBG(),
+      new LimeTorrents(),
       new ThePirateBay(),
       new X1337x()
     ];
