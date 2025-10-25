@@ -39,21 +39,20 @@ describe('Simple Search Tests', () => {
     const trackers = torrentSearch.getAvailableTrackers();
     expect(Array.isArray(trackers)).toBe(true);
     expect(trackers.length).toBeGreaterThan(0);
-    expect(trackers).toContain('1337x');
-    expect(trackers).toContain('RuTracker');
     expect(trackers).toContain('ThePirateBay');
+    // 1337x and RuTracker are currently disabled due to Cloudflare protection
   });
 
   test('should enable/disable trackers', () => {
     const initialTrackers = torrentSearch.getAvailableTrackers();
-    expect(initialTrackers).toContain('1337x');
+    expect(initialTrackers).toContain('ThePirateBay');
     
-    torrentSearch.disableTracker('1337x');
+    torrentSearch.disableTracker('ThePirateBay');
     const afterDisable = torrentSearch.getAvailableTrackers();
-    expect(afterDisable).not.toContain('1337x');
+    expect(afterDisable).not.toContain('ThePirateBay');
     
-    torrentSearch.enableTracker('1337x');
+    torrentSearch.enableTracker('ThePirateBay');
     const afterEnable = torrentSearch.getAvailableTrackers();
-    expect(afterEnable).toContain('1337x');
+    expect(afterEnable).toContain('ThePirateBay');
   });
 });

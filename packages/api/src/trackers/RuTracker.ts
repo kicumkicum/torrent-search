@@ -7,7 +7,7 @@ export class RuTracker extends BaseTracker {
       name: 'RuTracker',
       baseUrl: 'https://rutracker.org',
       searchPath: '/forum/tracker.php',
-      enabled: true,
+      enabled: false, // Временно отключен из-за Cloudflare защиты
       rateLimit: 1000
     });
   }
