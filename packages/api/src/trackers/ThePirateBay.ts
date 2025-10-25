@@ -26,7 +26,8 @@ export class ThePirateBay extends BaseTracker {
       console.log(`🔍 ThePirateBay: Full URL: ${this.config.baseUrl}${searchUrl}`);
       const response = await this.makeRequest(searchUrl, params);
       console.log(`📥 ThePirateBay: Received response length: ${response.length}`);
-      console.log(`📥 ThePirateBay: Response preview: ${response.substring(0, 200)}...`);
+      console.log(`📥 ThePirateBay: Response type: ${typeof response}`);
+      console.log(`📥 ThePirateBay: Response preview: ${JSON.stringify(response).substring(0, 200)}...`);
       
       const results = this.parseApiResults(response, query);
       console.log(`✅ ThePirateBay: Parsed ${results.length} results`);
@@ -37,12 +38,18 @@ export class ThePirateBay extends BaseTracker {
     }
   }
 
-  protected parseApiResults(jsonData: string, query: string): TorrentResult[] {
+  protected parseApiResults(jsonData: string | any, query: string): TorrentResult[] {
     try {
-      const data = JSON.parse(jsonData);
+      let data;
+      if (typeof jsonData === 'string') {
+        data = JSON.parse(jsonData);
+      } else {
+        data = jsonData;
+      }
       const results: TorrentResult[] = [];
 
       if (!Array.isArray(data)) {
+        console.log(`❌ ThePirateBay: Данные не являются массивом:`, typeof data, data);
         return results;
       }
 
