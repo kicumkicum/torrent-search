@@ -54,7 +54,7 @@ export class ThePirateBay extends BaseTracker {
       }
 
       data.forEach((item: any, index: number) => {
-        if (!item.name || item.name === 'No results returned') {
+        if (!item.name || item.name === 'No results returned' || item.id === '0') {
           return;
         }
 
