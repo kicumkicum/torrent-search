@@ -8,7 +8,9 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace=@torrent-search/web",
-    "build": "npm run build --workspace=@torrent-search/web",
+    "build": "npm run build --workspace=@torrent-search/api && npm run build --workspace=@torrent-search/web",
+    "build:api": "npm run build --workspace=@torrent-search/api",
+    "build:web": "npm run build --workspace=@torrent-search/web",
     "start": "npm run start --workspace=@torrent-search/web",
     "lint": "npm run lint --workspaces",
     "test": "npm run test --workspaces"
