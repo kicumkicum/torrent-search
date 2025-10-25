@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Download, Magnet, ExternalLink, Users, HardDrive, Calendar, Volume2, Building2 } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { Download, Magnet, ExternalLink, Users, HardDrive, Calendar, Volume2, Building2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { TorrentResult } from '@torrent-search/api'
 
 interface SearchResultsProps {
@@ -13,6 +13,9 @@ interface SearchResultsProps {
 export function SearchResults({ results, query, executionTime }: SearchResultsProps) {
   const [sortBy, setSortBy] = useState<'seeders' | 'size' | 'title'>('seeders')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [showScrollIndicators, setShowScrollIndicators] = useState({ left: false, right: true })
+  const [isCompactMode, setIsCompactMode] = useState(false)
+  const tableRef = useRef<HTMLDivElement>(null)
 
   const sortedResults = [...results].sort((a, b) => {
     let aValue: any, bValue: any
@@ -87,9 +90,36 @@ export function SearchResults({ results, query, executionTime }: SearchResultsPr
     }
   }
 
+  const checkScrollIndicators = () => {
+    if (tableRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = tableRef.current
+      setShowScrollIndicators({
+        left: scrollLeft > 0,
+        right: scrollLeft < scrollWidth - clientWidth - 1
+      })
+    }
+  }
+
+  const scrollTable = (direction: 'left' | 'right') => {
+    if (tableRef.current) {
+      const scrollAmount = 300
+      const newScrollLeft = tableRef.current.scrollLeft + (direction === 'left' ? -scrollAmount : scrollAmount)
+      tableRef.current.scrollTo({ left: newScrollLeft, behavior: 'smooth' })
+    }
+  }
+
+  useEffect(() => {
+    checkScrollIndicators()
+    const table = tableRef.current
+    if (table) {
+      table.addEventListener('scroll', checkScrollIndicators)
+      return () => table.removeEventListener('scroll', checkScrollIndicators)
+    }
+  }, [results])
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center space-x-4">
           <h2 className="text-xl font-semibold text-gray-900">
             Найдено результатов: {results.length}
@@ -100,6 +130,13 @@ export function SearchResults({ results, query, executionTime }: SearchResultsPr
         </div>
 
         <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setIsCompactMode(!isCompactMode)}
+            className={`btn btn-sm ${isCompactMode ? 'btn-primary' : 'btn-secondary'}`}
+            title={isCompactMode ? 'Обычный режим' : 'Компактный режим'}
+          >
+            {isCompactMode ? 'Развернуть' : 'Свернуть'}
+          </button>
           <label className="text-sm font-medium text-gray-700">Сортировка:</label>
           <select
             value={sortBy}
@@ -119,28 +156,48 @@ export function SearchResults({ results, query, executionTime }: SearchResultsPr
         </div>
       </div>
 
-      <div className="card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="table">
+      <div className="card overflow-hidden relative">
+        {/* Scroll indicators */}
+        {showScrollIndicators.left && (
+          <button
+            onClick={() => scrollTable('left')}
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 btn btn-secondary btn-sm shadow-lg"
+            title="Прокрутить влево"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+        )}
+        {showScrollIndicators.right && (
+          <button
+            onClick={() => scrollTable('right')}
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 btn btn-secondary btn-sm shadow-lg"
+            title="Прокрутить вправо"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        )}
+        
+        <div ref={tableRef} className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+          <table className={`table ${isCompactMode ? 'text-xs' : ''}`}>
             <thead className="table-header">
               <tr>
-                <th className="table-head">Название</th>
-                <th className="table-head">Категория</th>
-                <th className="table-head">Год</th>
-                <th className="table-head">Размер</th>
-                <th className="table-head">Студия</th>
-                <th className="table-head">Звук</th>
-                <th className="table-head">Сиды/Личи</th>
-                <th className="table-head">Трекер</th>
-                <th className="table-head">Действия</th>
+                <th className={`table-head ${isCompactMode ? 'w-80 min-w-80' : 'w-96 min-w-96'} sticky left-0 bg-white z-10`}>Название</th>
+                <th className={`table-head ${isCompactMode ? 'w-20 min-w-20' : 'w-24 min-w-24'} hidden sm:table-cell`}>Категория</th>
+                <th className={`table-head ${isCompactMode ? 'w-16 min-w-16' : 'w-20 min-w-20'} hidden md:table-cell`}>Год</th>
+                <th className={`table-head ${isCompactMode ? 'w-20 min-w-20' : 'w-24 min-w-24'}`}>Размер</th>
+                <th className={`table-head ${isCompactMode ? 'w-24 min-w-24' : 'w-32 min-w-32'} hidden lg:table-cell`}>Студия</th>
+                <th className={`table-head ${isCompactMode ? 'w-24 min-w-24' : 'w-32 min-w-32'} hidden xl:table-cell`}>Звук</th>
+                <th className={`table-head ${isCompactMode ? 'w-20 min-w-20' : 'w-24 min-w-24'}`}>Сиды/Личи</th>
+                <th className={`table-head ${isCompactMode ? 'w-20 min-w-20' : 'w-24 min-w-24'} hidden sm:table-cell`}>Трекер</th>
+                <th className={`table-head ${isCompactMode ? 'w-24 min-w-24' : 'w-32 min-w-32'} sticky right-0 bg-white z-10`}>Действия</th>
               </tr>
             </thead>
             <tbody>
               {sortedResults.map((result) => (
                 <tr key={result.id} className="table-row">
-                  <td className="table-cell">
+                  <td className={`table-cell ${isCompactMode ? 'w-80 min-w-80' : 'w-96 min-w-96'} sticky left-0 bg-white z-10`}>
                     <div className="space-y-1">
-                      <div className="font-medium text-gray-900 line-clamp-2">
+                      <div className={`font-medium text-gray-900 ${isCompactMode ? 'line-clamp-1' : 'line-clamp-2'}`}>
                         {result.title}
                       </div>
                       {result.quality && (
@@ -150,12 +207,12 @@ export function SearchResults({ results, query, executionTime }: SearchResultsPr
                       )}
                     </div>
                   </td>
-                  <td className="table-cell">
+                  <td className={`table-cell ${isCompactMode ? 'w-20 min-w-20' : 'w-24 min-w-24'} hidden sm:table-cell`}>
                     <span className={`inline-block px-2 py-1 text-xs font-medium rounded ${getCategoryColor(result.category)}`}>
                       {getCategoryLabel(result.category)}
                     </span>
                   </td>
-                  <td className="table-cell">
+                  <td className={`table-cell ${isCompactMode ? 'w-16 min-w-16' : 'w-20 min-w-20'} hidden md:table-cell`}>
                     {result.year && (
                       <div className="flex items-center text-sm text-gray-600">
                         <Calendar className="w-4 h-4 mr-1" />
@@ -163,31 +220,31 @@ export function SearchResults({ results, query, executionTime }: SearchResultsPr
                       </div>
                     )}
                   </td>
-                  <td className="table-cell">
+                  <td className={`table-cell ${isCompactMode ? 'w-20 min-w-20' : 'w-24 min-w-24'}`}>
                     <div className="flex items-center text-sm text-gray-600">
                       <HardDrive className="w-4 h-4 mr-1" />
                       {result.size}
                     </div>
                   </td>
-                  <td className="table-cell">
+                  <td className={`table-cell ${isCompactMode ? 'w-24 min-w-24' : 'w-32 min-w-32'} hidden lg:table-cell`}>
                     {result.studio && (
                       <div className="flex items-center text-sm text-gray-600">
                         <Building2 className="w-4 h-4 mr-1" />
-                        {result.studio}
+                        <span className="truncate">{result.studio}</span>
                       </div>
                     )}
                   </td>
-                  <td className="table-cell">
+                  <td className={`table-cell ${isCompactMode ? 'w-24 min-w-24' : 'w-32 min-w-32'} hidden xl:table-cell`}>
                     {result.audioTracks.length > 0 && (
                       <div className="flex items-center text-sm text-gray-600">
                         <Volume2 className="w-4 h-4 mr-1" />
-                        <span className="truncate max-w-32">
+                        <span className="truncate">
                           {result.audioTracks.join(', ')}
                         </span>
                       </div>
                     )}
                   </td>
-                  <td className="table-cell">
+                  <td className={`table-cell ${isCompactMode ? 'w-20 min-w-20' : 'w-24 min-w-24'}`}>
                     <div className="flex items-center text-sm">
                       <Users className="w-4 h-4 mr-1 text-green-600" />
                       <span className="text-green-600 font-medium">{result.seeders}</span>
@@ -195,13 +252,13 @@ export function SearchResults({ results, query, executionTime }: SearchResultsPr
                       <span className="text-red-600">{result.leechers}</span>
                     </div>
                   </td>
-                  <td className="table-cell">
+                  <td className={`table-cell ${isCompactMode ? 'w-20 min-w-20' : 'w-24 min-w-24'} hidden sm:table-cell`}>
                     <span className="text-sm text-gray-600">
                       {result.tracker}
                     </span>
                   </td>
-                  <td className="table-cell">
-                    <div className="flex items-center space-x-2">
+                  <td className={`table-cell ${isCompactMode ? 'w-24 min-w-24' : 'w-32 min-w-32'} sticky right-0 bg-white z-10`}>
+                    <div className="flex items-center space-x-1">
                       {result.torrentUrl && (
                         <button
                           onClick={() => handleDownload(result)}
