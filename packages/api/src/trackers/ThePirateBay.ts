@@ -22,15 +22,17 @@ export class ThePirateBay extends BaseTracker {
         page: 0
       };
 
-      console.log(`🔍 ThePirateBay: Searching for "${query}" with params:`, params);
-      console.log(`🔍 ThePirateBay: Full URL: ${this.config.baseUrl}${searchUrl}`);
       const response = await this.makeRequest(searchUrl, params);
-      console.log(`📥 ThePirateBay: Received response length: ${response.length}`);
-      console.log(`📥 ThePirateBay: Response type: ${typeof response}`);
-      console.log(`📥 ThePirateBay: Response preview: ${JSON.stringify(response).substring(0, 200)}...`);
-      
       const results = this.parseApiResults(response, query);
-      console.log(`✅ ThePirateBay: Parsed ${results.length} results`);
+      
+      // Если результатов нет, попробуем предложить исправления
+      if (results.length === 0 && query.length > 3) {
+        const suggestions = this.suggestCorrections(query);
+        if (suggestions.length > 0) {
+          console.log(`💡 ThePirateBay: Возможные исправления для "${query}": ${suggestions.join(', ')}`);
+        }
+      }
+      
       return results;
     } catch (error) {
       console.error('ThePirateBay search error:', error);
@@ -49,7 +51,6 @@ export class ThePirateBay extends BaseTracker {
       const results: TorrentResult[] = [];
 
       if (!Array.isArray(data)) {
-        console.log(`❌ ThePirateBay: Данные не являются массивом:`, typeof data, data);
         return results;
       }
 
@@ -136,5 +137,25 @@ export class ThePirateBay extends BaseTracker {
     }
 
     return undefined;
+  }
+
+  private suggestCorrections(query: string): string[] {
+    const commonCorrections: { [key: string]: string[] } = {
+      'ineption': ['inception'],
+      'inceptoin': ['inception'],
+      'incepton': ['inception'],
+      'avengers': ['avengers', 'marvel'],
+      'batman': ['batman', 'dark knight'],
+      'superman': ['superman', 'man of steel'],
+      'spiderman': ['spiderman', 'spider-man'],
+      'starwars': ['star wars', 'starwars'],
+      'lordofrings': ['lord of the rings', 'lotr'],
+      'gameofthrones': ['game of thrones', 'got'],
+      'breakingbad': ['breaking bad'],
+      'thewalkingdead': ['the walking dead', 'twd']
+    };
+
+    const lowerQuery = query.toLowerCase();
+    return commonCorrections[lowerQuery] || [];
   }
 }
