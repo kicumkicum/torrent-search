@@ -27,13 +27,13 @@ export abstract class BaseTracker {
       console.log(`Making request to ${this.config.name}: ${url}`, params);
       const response = await this.httpClient.get(url, { params });
       console.log(`Response from ${this.config.name}:`, {
-        status: response.status,
-        statusText: response.statusText,
-        dataType: typeof response.data,
-        dataLength: response.data ? response.data.length : 0
+        status: response?.status,
+        statusText: response?.statusText,
+        dataType: typeof response?.data,
+        dataLength: response?.data ? response.data.length : 0
       });
       
-      if (!response.data) {
+      if (!response?.data) {
         throw new Error(`No data received from ${this.config.name}`);
       }
       
