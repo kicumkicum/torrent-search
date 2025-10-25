@@ -1,4 +1,5 @@
 import { RuTracker } from './trackers/RuTracker';
+import { RuTor } from './trackers/RuTor';
 import { ThePirateBay } from './trackers/ThePirateBay';
 import { X1337x } from './trackers/1337x';
 import { BaseTracker } from './trackers/BaseTracker';
@@ -11,6 +12,7 @@ export class TorrentSearch {
   constructor() {
     this.trackers = [
       new RuTracker(),
+      new RuTor(),
       new ThePirateBay(),
       new X1337x()
     ];
